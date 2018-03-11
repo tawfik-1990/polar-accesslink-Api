@@ -25,7 +25,7 @@ app.post('/heart/:userid', function(req,res)
   if (!userid || userid === "") {
     return res.json({ "success": false, "msg": "userid is false", "error": err });
   }
-getclesecret(userid)
+Get_Cle_Secret(userid)
 
 .then( function( data1 ) { 
 
@@ -36,26 +36,27 @@ const  CLIENT_SECRET = data1[0].client_secret;
 
  const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
 
-    return getnotifications (creds)
+    return Get_Notifications (creds)
 
    
     } ).then( function( data) {  
-console.log(data);
-return getaccestoken(data.toString())
+
+return Get_accesstoken(data.toString())
    
  } )
 .then( function( data6) { 
 const  userid = data6[0].user_idtoken;
 const  Accesstoken = data6[0].access_token;
-return createtransction (userid,Accesstoken)
+
+return Create_Transction (userid,Accesstoken)
    
  } ).then( function( data2) { 
-console.log(data2);
+
 const  userid = data2.userid;
 const  Accesstoken = data2.access_token;
 const  transaction = data2.transaction;
 
-  return Listexercises (userid.toString(),Accesstoken.toString(),transaction.toString())
+  return List_Exercises (userid.toString(),Accesstoken.toString(),transaction.toString())
    
  } ).then( function( data3) { 
  	
@@ -64,30 +65,30 @@ const  transaction = data2.transaction;
 const  Accesstoken = data3.access_token;
 const  dat = data3.data;
 
- return getsampl(Accesstoken.toString(),dat)
+ return Get_samples(Accesstoken.toString(),dat)
     
   } ).then( function( data4) { 
-console.log(data4);
+
 const  Accesstoken = data4.access_token;
 const  dat = data4.data;
 
- return getheartrate (Accesstoken.toString(),dat)
+ return Get_heart_rate (Accesstoken.toString(),dat)
 
     } ).then( function( data5 ) { 
 
-return res.status(400).send({ "success": false, "msg": data5 })
+return res.status(201).send({ "success": true, "msg": data5 })
   } )
     .catch((error) => {
-  console.log(error);
+  
 });
 
-console.log("taw");
+
 
 })
 
 
 
-function getnotifications (client_credentials,data)
+function Get_Notifications (client_credentials,data)
 {
   return new Promise( function( resolve, reject ){
 req({
@@ -131,7 +132,7 @@ reject("kein notifications");
 
 
 }
-function createtransction (user,Accesstoken)
+function Create_Transction  (user,Accesstoken)
 {
   return new Promise( function( resolve, reject ){
 req({
@@ -164,7 +165,7 @@ var json= JSON.parse(body);
     var transaction = json [ "transaction-id"];
     
      
-console.log(transaction);
+
 var dat ={
 
   access_token:Accesstoken,
@@ -184,7 +185,7 @@ resolve(dat);
   
  
 }
-function Listexercises(userid,Accesstoken,transaction_id)
+function List_Exercises (userid,Accesstoken,transaction_id)
 {
 
 return new Promise( function( resolve, reject ){
@@ -219,7 +220,7 @@ req({
     {
        
 var json = JSON.parse(body);
-console.log(json.exercises);
+
 
 
 var js = json.exercises;
@@ -241,7 +242,7 @@ resolve(dat);
 
 
 }
-function getsampl(Accesstoken,urls)
+function Get_samples(Accesstoken,urls)
 {
 
 return new Promise( function( resolve, reject ){
@@ -323,7 +324,7 @@ req({
 
 
 }
-function getheartrate (Accesstoken,urls)
+function Get_heart_rate (Accesstoken,urls)
 {
 return new Promise( function( resolve, reject ){
   
@@ -379,7 +380,7 @@ req({
 
 
 }
-function getclesecret(userid)
+function Get_Cle_Secret (userid)
 {
 
  return new Promise( function( resolve, reject ){
@@ -421,7 +422,7 @@ mongo.connect(url, function(err, db) {
 }
 
 
-function getaccestoken(userid)
+function Get_accesstoken(userid)
 {
 
  return new Promise( function( resolve, reject ){
