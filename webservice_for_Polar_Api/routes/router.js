@@ -57,25 +57,38 @@ const  userid = data2.userid;
 const  Accesstoken = data2.access_token;
 const  transaction = data2.transaction;
 
-  return List_Exercises (userid.toString(),Accesstoken.toString(),transaction.toString())
+  return List_Exercises (userid,Accesstoken,transaction)
    
  } ).then( function( data3) { 
- 	
-
-
+ 
+const user_id = data3.userid;
+const  transaction_id = data3.transactionid;
 const  Accesstoken = data3.access_token;
 const  dat = data3.data;
 
- return Get_samples(Accesstoken.toString(),dat)
+ return Get_samples(Accesstoken,dat,transaction_id,user_id)
     
   } ).then( function( data4) { 
-
+   
+const user_id = data4.userid;
 const  Accesstoken = data4.access_token;
+const  transaction = data4.transactionid;
 const  dat = data4.data;
 
- return Get_heart_rate (Accesstoken.toString(),dat)
+
+ return Get_heart_rate (Accesstoken,dat,user_id,transaction )
 
     } ).then( function( data5 ) { 
+
+const userid = data5.userid;
+const  Accesstoken = data5.access_token;
+const  transactionid = data5.transactionid;
+const  dat = data5.data;
+
+ return Commit_Transction  (Accesstoken,userid, transactionid,dat )
+
+  } ).then( function( data5 ) { 
+console.log(data5);
 
 return res.status(201).send({ "success": true, "msg": data5 })
   } )
@@ -224,9 +237,9 @@ var json = JSON.parse(body);
 
 var js = json.exercises;
 var dat ={
-
+  userid :userid,
   access_token:Accesstoken,
-  
+  transactionid: transaction_id,
   data:js
 };
 resolve(dat);
@@ -239,7 +252,7 @@ resolve(dat);
 }
 
 
-function Get_samples(Accesstoken,urls)
+function Get_samples(Accesstoken,urls,transaction_id,user_id)
 {
 
 return new Promise( function( resolve, reject ){
@@ -304,7 +317,10 @@ req({
            }
            var dat =
            {
-           access_token:Accesstoken,
+            userid :user_id,
+ 
+            transactionid: transaction_id,
+            access_token:Accesstoken,
            
               data:responses1
            }
@@ -322,7 +338,7 @@ req({
 }
 
 
-function Get_heart_rate (Accesstoken,urls)
+function Get_heart_rate (Accesstoken,urls,user_id,transaction_id )
 {
 return new Promise( function( resolve, reject ){
   
@@ -364,9 +380,19 @@ req({
         if (completed_requests == urls.length) 
  {
           
-            
+           var dat =
+           {
+            userid :user_id,
+ 
+            transactionid: transaction_id,
+            access_token:Accesstoken,
+           
+              data:responses
+           }
+           
+           resolve(dat); 
 
-           resolve(responses);
+          
 
 }
 
@@ -450,6 +476,88 @@ mongo.connect(url, function(err, db) {
 }
     
     });
+    }
+  });
+  });
+
+}
+
+function Commit_Transction  (Accesstoken,userid,transactionid,data)
+{
+  return new Promise( function( resolve, reject ){
+req({
+    headers: {
+      
+ 
+'Authorization': `Bearer ${Accesstoken}`
+    },
+
+  uri:   'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+' ',
+
+
+   
+    method: 'PUT'
+  }, function  (err, res, body) {
+    
+    if (err ) {
+ reject(err );
+    }
+    else if(res.statusCode == 200)
+    {
+
+       resolve(data);
+
+
+        
+    }
+  else if(res.statusCode == 204)
+  {
+    
+   reject("204");
+
+  }
+  else
+  {
+   reject("404");
+  }
+  
+ } ) ;
+ } ) ; 
+}
+
+function insert_heart_tobase(userid,heartrate)
+{
+
+ return new Promise( function( resolve, reject ){
+ var item = {
+    userid: userid,
+   heart_rate: heartrate
+  };
+mongo.connect(url, function(err, db) {
+    if (err)
+    {
+      reject(err);
+    }
+    else
+    {
+     var dbo = db.db("usertoken");
+     var query = { userid: userid };
+  dbo.collection("user").insertOne(item, function(err, result) {
+  if(err)
+      {
+        reject(err);
+      }
+     else
+     {
+      resolve('Item inserted');
+      db.close();
+     }
+    
+     
+
+      })
+     
+   
     }
   });
   });
