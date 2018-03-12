@@ -23,7 +23,8 @@ app.post('/heart/:userid', function(req,res)
 {
    var userid = req.params.userid;
   if (!userid || userid === "") {
-    return res.json({ "success": false, "msg": "userid is false", "error": err });
+  
+    return res.status(400).send({ "success": false, "msg": "userid is false", "error": err })
   }
 Get_Cle_Secret(userid)
 
@@ -121,7 +122,7 @@ reject("kein notifications");
     var json= JSON.parse(body);
     console.log(json);
     var user = json ["available-user-data"][0]["user-id"];
-  
+  console.log(user);
    
  resolve(user);
 
@@ -172,6 +173,7 @@ var dat ={
   userid:user,
   transaction:transaction
 }
+
 resolve(dat);
 
   }
@@ -463,4 +465,41 @@ console.log(result);
 
 
 
+function insert_heart_tobase(userid,heartrate)
+{
 
+ return new Promise( function( resolve, reject ){
+ var item = {
+    userid: userid,
+   heart_rate: heartrate
+  };
+mongo.connect(url, function(err, db) {
+    if (err)
+    {
+    	reject(err);
+    }
+    else
+    {
+     var dbo = db.db("usertoken");
+     var query = { userid: userid };
+  dbo.collection("user").insertOne(item, function(err, result) {
+  if(err)
+      {
+        reject(err);
+      }
+     else
+     {
+     	resolve('Item inserted');
+     	db.close();
+     }
+    
+     
+
+      })
+     
+   
+    }
+  });
+  });
+
+}
