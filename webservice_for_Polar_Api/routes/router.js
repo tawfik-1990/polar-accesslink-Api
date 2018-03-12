@@ -23,8 +23,7 @@ app.post('/heart/:userid', function(req,res)
 {
    var userid = req.params.userid;
   if (!userid || userid === "") {
-  
-    return res.status(400).send({ "success": false, "msg": "userid is false", "error": err })
+    return res.json({ "success": false, "msg": "userid is false", "error": err });
   }
 Get_Cle_Secret(userid)
 
@@ -42,7 +41,7 @@ const  CLIENT_SECRET = data1[0].client_secret;
    
     } ).then( function( data) {  
 
-return Get_accesstoken(data.toString())
+return Get_accesstoken(data)
    
  } )
 .then( function( data6) { 
@@ -122,7 +121,7 @@ reject("kein notifications");
     var json= JSON.parse(body);
     console.log(json);
     var user = json ["available-user-data"][0]["user-id"];
-  console.log(user);
+  
    
  resolve(user);
 
@@ -173,7 +172,6 @@ var dat ={
   userid:user,
   transaction:transaction
 }
-
 resolve(dat);
 
   }
@@ -220,7 +218,7 @@ req({
     }
     else
     {
-       
+    console.log(body);   
 var json = JSON.parse(body);
 
 
@@ -287,24 +285,24 @@ req({
     {
        responses.push(body);
        completed_requests++;
-    }
-
- if (completed_requests == urls.length) 
+       
+       if (completed_requests == urls.length) 
  {
           
            for(var i=0; j=urls.length,i<j; i++) 
            {
 
            responsess.push(JSON.parse (responses[i]));
+         
            }
 
            for(var i=0; j=responsess.length,i<j; i++) 
            {
-          for(var k=0; l=responsess[i].samples.length,k<l; k++)
-           {
+         
 
            responses1.push(responsess[i].samples[0]);
-            }
+          
+          
 
            }
            var dat =
@@ -313,9 +311,13 @@ req({
            
               data:responses1
            }
+           
            resolve(dat);
 
           }
+    }
+
+
  } ) ;
 
 }
@@ -362,16 +364,18 @@ req({
     {
        responses.push(body);
        completed_requests++;
-    }
+       
 
- if (completed_requests == urls.length) 
+    }
+        if (completed_requests == urls.length) 
  {
           
-           
+            
 
            resolve(responses);
 
 }
+
   
   
  } ) ;
@@ -450,7 +454,7 @@ mongo.connect(url, function(err, db) {
 
   } else{
 
-console.log(result);
+
  resolve(result);
   
  
@@ -465,3 +469,41 @@ console.log(result);
 
 
 
+function insert_heart_tobase(userid,heartrate)
+{
+
+ return new Promise( function( resolve, reject ){
+ var item = {
+    userid: userid,
+   heart_rate: heartrate
+  };
+mongo.connect(url, function(err, db) {
+    if (err)
+    {
+    	reject(err);
+    }
+    else
+    {
+     var dbo = db.db("usertoken");
+     var query = { userid: userid };
+  dbo.collection("user").insertOne(item, function(err, result) {
+  if(err)
+      {
+        reject(err);
+      }
+     else
+     {
+     	resolve('Item inserted');
+     	db.close();
+     }
+    
+     
+
+      })
+     
+   
+    }
+  });
+  });
+
+}
