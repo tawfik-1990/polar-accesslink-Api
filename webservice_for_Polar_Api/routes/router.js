@@ -21,10 +21,11 @@ var app = module.exports = express.Router();
 app.post('/heart/:userid', function(req,res)
 
 {
+
    var userid = req.params.userid;
   if (!userid || userid === "") {
 
-    return res.status(400).send({ "success": false, "msg": "userid is false", "error": err })
+    return res.status(404).send({ "success": false, "msg": "userid is false", "error": err })
   }
 Get_Cle_Secret(userid)
 
@@ -66,36 +67,43 @@ const  transaction_id = data3.transactionid;
 const  Accesstoken = data3.access_token;
 const  dat = data3.data;
 
- return Get_samples(Accesstoken,dat,transaction_id,user_id)
-    
+ return  Get_exercise_summary(Accesstoken,dat,user_id,transaction_id)
+
   } ).then( function( data4) { 
-   
+ 
 const user_id = data4.userid;
+const  transaction_id = data4.transactionid;
 const  Accesstoken = data4.access_token;
-const  transaction = data4.transactionid;
 const  dat = data4.data;
+ 
+ return  Get_samples(Accesstoken,dat,transaction_id,user_id)
 
-
- return Get_heart_rate (Accesstoken,dat,user_id,transaction )
-
-    } ).then( function( data5 ) { 
-
-const userid = data5.userid;
+  } ).then( function( data5) { 
+ 
+const user_id = data5.userid;
+const  transaction_id = data5.transactionid;
 const  Accesstoken = data5.access_token;
-const  transactionid = data5.transactionid;
-const  dat = data5.data;
+const  samples = data5.data;
+ 
+ return  Get_heart_rate (Accesstoken,samples,user_id,transaction_id )
 
- return Commit_Transction  (Accesstoken,userid, transactionid,dat )
+  } ).then( function( data7 ) { 
 
-  } ).then( function( data5 ) { 
-console.log(data5);
+const userid = data7.userid;
+const  Accesstoken = data7.access_token;
+const  transactionid = data7.transactionid;
+const  dat = data7.data;
 
-return res.status(201).send({ "success": true, "msg": data5 })
+ return Commit_Transction  (Accesstoken,userid,transactionid,dat)
+
+  } ).then( function( data8 ) { 
+
+
+return res.status(200).send({ "success": true, "msg": data8})
   } )
     .catch((error) => {
-  
+  console.log(error);
 });
-
 
 
 })
@@ -143,9 +151,9 @@ reject("kein notifications");
 
   } );
 } );
-
-
 }
+
+
 function Create_Transction  (user,Accesstoken)
 {
   return new Promise( function( resolve, reject ){
@@ -252,16 +260,17 @@ resolve(dat);
 }
 
 
-function Get_samples(Accesstoken,urls,transaction_id,user_id)
+function Get_samples(Accesstoken,info,transactionid,userid)
 {
 
 return new Promise( function( resolve, reject ){
 var responses = [];
-var responsess = [];
-var responses1 = [];
+
+
+
 var completed_requests = 0;
 
-for (i in urls)
+for (i in info)
 {
 
  
@@ -272,7 +281,7 @@ req({
 'Authorization': `Bearer ${Accesstoken}`
     },
 
-  uri:  ` ${urls[i]}/samples`,
+  uri:  'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+'/exercises/'+ info[i][2]+'/samples',
    
     method: 'GET'
   }, function  (err, res, body) {
@@ -293,38 +302,44 @@ req({
     }
     else
     {
-       responses.push(body);
+       responses.push(JSON.parse(body));
+      
+      
        completed_requests++;
+
        
-       if (completed_requests == urls.length) 
+       if (completed_requests == info.length) 
  {
-          
-           for(var i=0; j=urls.length,i<j; i++) 
-           {
 
-           responsess.push(JSON.parse (responses[i]));
+  
+
+
+
+
+     var samples=[];
+
+         for(k in responses)
+           {
+         res=[];
+
+           res.push(responses[k].samples[0]);
+           res.push(info[k][1]);
+           samples.push(res);
          
            }
+            
 
-           for(var i=0; j=responsess.length,i<j; i++) 
-           {
-         
-
-           responses1.push(responsess[i].samples[0]);
-          
-          
-
-           }
+      
            var dat =
            {
-            userid :user_id,
+            userid :userid,
  
-            transactionid: transaction_id,
+            transactionid: transactionid,
             access_token:Accesstoken,
            
-              data:responses1
+              data:samples
            }
-           
+          
            resolve(dat);
 
           }
@@ -335,11 +350,93 @@ req({
 
 }
  } ) ;
+
+}
+
+function Get_heart_rate (Accesstoken,samples,user_id,transaction_id )
+{
+return new Promise( function( resolve, reject ){
+  
+var responses = [];
+var completed_requests = 0;
+for (i in samples)
+{
+req({
+    headers: {
+      
+  'Accept':'application/json',
+'Authorization': `Bearer ${Accesstoken}`
+    },
+
+   uri:  ` ${samples[i][0]}`,
+   
+    method: 'GET'
+  }, function  (err, res, body) {
+        if (err  ) {
+
+        reject(err);
+       completed_requests++;
+   
+    } 
+
+    else if(body ==='' )
+    {
+
+     reject("no content");
+   completed_requests++;
+    }
+    else
+    {
+       responses.push(JSON.parse(body));
+       completed_requests++;
+       
+
+    }
+        if (completed_requests == samples.length) 
+ {
+          
+     var heart_rate =[];
+
+         for(i in responses){
+         var res=[];
+      
+       res.push(responses[i].data);
+     
+      
+       res.push(samples[i][1]);
+       res.push(user_id);
+      heart_rate.push(res);
+
+       }
+
+
+
+           var dat =
+           {
+            userid :user_id,
+ 
+            transactionid: transaction_id,
+            access_token:Accesstoken,
+           
+              data:heart_rate
+           }
+         
+           resolve(dat); 
+          
+}
+
+  
+  
+ } ) ;
+}
+ } ) ;
 }
 
 
-function Get_heart_rate (Accesstoken,urls,user_id,transaction_id )
+
+function Get_exercise_summary (Accesstoken,urls,user_id,transaction_id )
 {
+ 
 return new Promise( function( resolve, reject ){
   
 var responses = [];
@@ -364,22 +461,44 @@ req({
    
     } 
 
-    else if(body ==='' )
+    else if(res.statusCode === 204)
     {
 
-     reject("no content");
+  resolve("no content");
    completed_requests++;
     }
     else
     {
-       responses.push(body);
+     
+       responses.push(JSON.parse(body));
        completed_requests++;
        
 
     }
         if (completed_requests == urls.length) 
  {
-          
+        
+
+
+          var exercise_summary=[];
+
+         for(i in responses){
+         var temp=[];
+      
+       temp.push(responses[i]["transaction-id"]);
+     
+       temp.push(responses[i]["start-time"]);
+       temp.push(responses[i].id);
+       exercise_summary.push(temp);
+
+       }
+
+
+
+
+
+
+
            var dat =
            {
             userid :user_id,
@@ -387,13 +506,11 @@ req({
             transactionid: transaction_id,
             access_token:Accesstoken,
            
-              data:responses
+              data:exercise_summary
            }
-           
-           resolve(dat); 
-
           
-
+           resolve(dat); 
+          
 }
 
   
@@ -504,7 +621,7 @@ req({
     }
     else if(res.statusCode == 200)
     {
-
+console.log("IST OKI ");
        resolve(data);
 
 
@@ -523,43 +640,4 @@ req({
   
  } ) ;
  } ) ; 
-}
-
-function insert_heart_tobase(userid,heartrate)
-{
-
- return new Promise( function( resolve, reject ){
- var item = {
-    userid: userid,
-   heart_rate: heartrate
-  };
-mongo.connect(url, function(err, db) {
-    if (err)
-    {
-      reject(err);
-    }
-    else
-    {
-     var dbo = db.db("usertoken");
-     var query = { userid: userid };
-  dbo.collection("user").insertOne(item, function(err, result) {
-  if(err)
-      {
-        reject(err);
-      }
-     else
-     {
-      resolve('Item inserted');
-      db.close();
-     }
-    
-     
-
-      })
-     
-   
-    }
-  });
-  });
-
 }
