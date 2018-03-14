@@ -1,13 +1,9 @@
 var express = require('express');
- var querystring = require('querystring');
+var querystring = require('querystring');
 var req = require('request');
- var mongo = require('mongodb').MongoClient;
-
+var mongo = require('mongodb').MongoClient;
 var assert = require('assert');
- 
 const btoa = require('btoa');
-
-
 const utf8 = require('utf8');
 
 
@@ -18,35 +14,35 @@ var url = 'mongodb://localhost:27017/';
 var app = module.exports = express.Router();
  
 
+
 app.post('/heart/:userid', function(req,res)
 
 {
 
-   var userid = req.params.userid;
-  if (!userid || userid === "") {
-
-    return res.status(404).send({ "success": false, "msg": "userid is false", "error": err })
+ var userid = req.params.userid;
+  if (!userid || userid === "")
+  {
+  return res.status(404).send({ "success": false, "msg": "userid is false", "error": err })
   }
+
+
 Get_Cle_Secret(userid)
 
 .then( function( data1 ) { 
 
 const  CLIENT_ID = data1[0].client_id;
 const  CLIENT_SECRET = data1[0].client_secret;
+const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
 
-
-
- const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
-
-    return Get_Notifications (creds)
+return Get_Notifications (creds)
 
    
-    } ).then( function( data) {  
+} ).then( function( data) {  
 
 return Get_accesstoken(data)
    
- } )
-.then( function( data6) { 
+} ).then( function( data6) { 
+
 const  userid = data6[0].user_idtoken;
 const  Accesstoken = data6[0].access_token;
 
@@ -58,7 +54,7 @@ const  userid = data2.userid;
 const  Accesstoken = data2.access_token;
 const  transaction = data2.transaction;
 
-  return List_Exercises (userid,Accesstoken,transaction)
+return List_Exercises (userid,Accesstoken,transaction)
    
  } ).then( function( data3) { 
  
@@ -67,9 +63,9 @@ const  transaction_id = data3.transactionid;
 const  Accesstoken = data3.access_token;
 const  dat = data3.data;
 
- return  Get_exercise_summary(Accesstoken,dat,user_id,transaction_id)
+return  Get_exercise_summary(Accesstoken,dat,user_id,transaction_id)
 
-  } ).then( function( data4) { 
+} ).then( function( data4) { 
  
 const user_id = data4.userid;
 const  transaction_id = data4.transactionid;
@@ -78,30 +74,30 @@ const  dat = data4.data;
  
  return  Get_samples(Accesstoken,dat,transaction_id,user_id)
 
-  } ).then( function( data5) { 
+} ).then( function( data5) { 
  
 const user_id = data5.userid;
 const  transaction_id = data5.transactionid;
 const  Accesstoken = data5.access_token;
 const  samples = data5.data;
  
- return  Get_heart_rate (Accesstoken,samples,user_id,transaction_id )
+return  Get_heart_rate (Accesstoken,samples,user_id,transaction_id )
 
-  } ).then( function( data7 ) { 
+} ).then( function( data7 ) { 
 
 const userid = data7.userid;
 const  Accesstoken = data7.access_token;
 const  transactionid = data7.transactionid;
 const  dat = data7.data;
 
- return Commit_Transction  (Accesstoken,userid,transactionid,dat)
+return Commit_Transction  (Accesstoken,userid,transactionid,dat)
 
-  } ).then( function( data8 ) { 
+} ).then( function( data8 ) { 
 
 
 return res.status(200).send({ "success": true, "msg": data8})
-  } )
-    .catch((error) => {
+
+  } ).catch((error) => {
   console.log(error);
 });
 
@@ -112,31 +108,29 @@ return res.status(200).send({ "success": true, "msg": data8})
 
 function Get_Notifications (client_credentials,data)
 {
-  return new Promise( function( resolve, reject ){
-req({
-    headers: {
-      
-  'Accept':'application/json',
-  'Authorization': `Basic ${client_credentials}`
-    },
+return new Promise( function( resolve, reject ){
 
-  uri:  'https://www.polaraccesslink.com/v3/notifications',
+req({
+     headers: 
+     {
+      
+     'Accept':'application/json',
+     'Authorization': `Basic ${client_credentials}`
+      },
+
+      uri:  'https://www.polaraccesslink.com/v3/notifications',
    
     method: 'GET'
-  },function  (err, res, body) {
+  },function  (err, res, body) 
+  {
     if (err )
     {
-    
-      reject(err);
+    reject(err);
     }
     else if(body==='')
     {
 
-reject("kein notifications");
-       
-    
-
-        
+    reject("kein notifications");
     }
     else
     {
@@ -145,9 +139,9 @@ reject("kein notifications");
     var user = json ["available-user-data"][0]["user-id"];
   
    
- resolve(user);
+    resolve(user);
 
-   }
+     }
 
   } );
 } );
@@ -161,42 +155,40 @@ req({
     headers: {
       
   'Accept':'application/json',
-'Authorization': `Bearer ${Accesstoken}`
+  'Authorization': `Bearer ${Accesstoken}`
     },
 
-  uri:  'https://www.polaraccesslink.com/v3/users/'+user+'/exercise-transactions',
+     uri:  'https://www.polaraccesslink.com/v3/users/'+user+'/exercise-transactions',
    
     method: 'POST'
   }, function  (err, res, body) {
     
-    if (err ) {
- reject(err );
+    if (err )
+    {
+     reject(err );
     }
      else if(body==='')
     {
 
-reject("kein transaction");
-       
-
-
-        
+    reject("kein transaction");
     }
   else
   {
-var json= JSON.parse(body);
+    var json= JSON.parse(body);
     var transaction = json [ "transaction-id"];
     
      
 
-var dat ={
+    var dat ={
 
-  access_token:Accesstoken,
-  userid:user,
-  transaction:transaction
-}
-resolve(dat);
+                access_token:Accesstoken,
+                userid:user,
+                transaction:transaction
+              }
 
-  }
+   resolve(dat);
+
+   }
   
  } ) ;
  } ) ;
@@ -209,48 +201,49 @@ function List_Exercises (userid,Accesstoken,transaction_id)
 {
 
 return new Promise( function( resolve, reject ){
+
 req({
     headers: {
       
   'Accept':'application/json',
-'Authorization': `Bearer ${Accesstoken}`
+  'Authorization': `Bearer ${Accesstoken}`
     },
 
-  uri: 'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transaction_id+' ',
+     uri: 'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transaction_id+' ',
    
-    method: 'GET'
+     method: 'GET'
   }, function  (err, res, body) {
-       if (err  ) {
-
+       if (err  ) 
+       {
         reject(err);
-       
+       } 
+       else if(res.statusCode === 404)
+       {
+        reject("Not found");
+        }
+        else if(res.statusCode === 204)
+        {
 
-    } else if(res.statusCode === 404)
-    {
-     
-     reject("Not found");
-    }
-    else if(res.statusCode === 204)
-    {
-
-     reject("no content");
+        reject("no content");
    
-    }
-    else
-    {
-    console.log(body);   
-var json = JSON.parse(body);
+        }
+         else
+        {
+         console.log(body);   
+         var json = JSON.parse(body);
 
 
 
-var js = json.exercises;
-var dat ={
-  userid :userid,
-  access_token:Accesstoken,
-  transactionid: transaction_id,
-  data:js
-};
-resolve(dat);
+          var js = json.exercises;
+          var dat ={
+                     userid :userid,
+                     access_token:Accesstoken,
+                     transactionid: transaction_id,
+                     data:js
+                     };
+
+    resolve(dat);
+
     }
   
   
@@ -264,83 +257,72 @@ function Get_samples(Accesstoken,info,transactionid,userid)
 {
 
 return new Promise( function( resolve, reject ){
+
 var responses = [];
-
-
-
 var completed_requests = 0;
 
 for (i in info)
 {
 
- 
 req({
     headers: {
       
-  'Accept':'application/json',
-'Authorization': `Bearer ${Accesstoken}`
+   'Accept':'application/json',
+   'Authorization': `Bearer ${Accesstoken}`
     },
 
-  uri:  'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+'/exercises/'+ info[i][2]+'/samples',
+    uri:  'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+'/exercises/'+ info[i][2]+'/samples',
    
     method: 'GET'
   }, function  (err, res, body) {
 
 
-       if (err  ) {
+       if (err  ) 
+       {
 
         reject(err);
-       completed_requests++;
+        completed_requests++;
    
-    } 
+       } 
 
-    else if(body ==='' )
-    {
+       else if(body ==='' )
+       {
 
-     reject("no content");
-   completed_requests++;
-    }
-    else
-    {
+       reject("no content");
+       completed_requests++;
+       }
+       else
+       {
        responses.push(JSON.parse(body));
-      
-      
        completed_requests++;
 
        
        if (completed_requests == info.length) 
- {
+         {
 
-  
-
-
-
-
-     var samples=[];
+         var samples=[];
 
          for(k in responses)
            {
-         res=[];
+             res=[];
 
-           res.push(responses[k].samples[0]);
-           res.push(info[k][1]);
-           samples.push(res);
+             res.push(responses[k].samples[0]);
+             res.push(info[k][1]);
+             samples.push(res);
          
-           }
+            }
             
 
       
-           var dat =
-           {
-            userid :userid,
- 
-            transactionid: transactionid,
-            access_token:Accesstoken,
-           
-              data:samples
-           }
+           var dat = {
+
+                        userid :userid,
+                        transactionid: transactionid,
+                        access_token:Accesstoken,
+                        data:samples
+                      }
           
-           resolve(dat);
+          resolve(dat);
 
           }
     }
@@ -365,63 +347,63 @@ req({
     headers: {
       
   'Accept':'application/json',
-'Authorization': `Bearer ${Accesstoken}`
+  'Authorization': `Bearer ${Accesstoken}`
     },
 
    uri:  ` ${samples[i][0]}`,
    
     method: 'GET'
   }, function  (err, res, body) {
-        if (err  ) {
 
-        reject(err);
-       completed_requests++;
+    if (err  )
+    {
+
+     reject(err);
+     completed_requests++;
    
     } 
 
     else if(body ==='' )
+
     {
 
      reject("no content");
-   completed_requests++;
+     completed_requests++;
+
     }
     else
     {
        responses.push(JSON.parse(body));
        completed_requests++;
        
-
     }
-        if (completed_requests == samples.length) 
- {
+       if (completed_requests == samples.length) 
+         {
           
-     var heart_rate =[];
+          var heart_rate =[];
 
          for(i in responses){
          var res=[];
       
-       res.push(responses[i].data);
+         res.push(responses[i].data);
      
       
-       res.push(samples[i][1]);
-       res.push(user_id);
-      heart_rate.push(res);
+         res.push(samples[i][1]);
+         res.push(user_id);
+         heart_rate.push(res);
 
-       }
+          }
 
 
 
-           var dat =
-           {
-            userid :user_id,
- 
-            transactionid: transaction_id,
-            access_token:Accesstoken,
-           
-              data:heart_rate
-           }
+           var dat = {
+                       userid :user_id,
+                       transactionid: transaction_id,
+                       access_token:Accesstoken,
+                       data:heart_rate
+                      }
          
-           resolve(dat); 
+    resolve(dat); 
           
 }
 
@@ -447,69 +429,62 @@ req({
     headers: {
       
   'Accept':'application/json',
-'Authorization': `Bearer ${Accesstoken}`
+  'Authorization': `Bearer ${Accesstoken}`
     },
 
-   uri:  ` ${urls[i]}`,
+    uri:  ` ${urls[i]}`,
    
     method: 'GET'
   }, function  (err, res, body) {
-        if (err  ) {
 
-        reject(err);
-       completed_requests++;
+    if (err  )
+    {
+
+     reject(err);
+     completed_requests++;
    
     } 
 
     else if(res.statusCode === 204)
     {
 
-  resolve("no content");
-   completed_requests++;
+    reject("no content");
+    completed_requests++;
     }
     else
     {
      
-       responses.push(JSON.parse(body));
-       completed_requests++;
+    responses.push(JSON.parse(body));
+    completed_requests++;
        
 
     }
         if (completed_requests == urls.length) 
- {
-        
-
+         {
 
           var exercise_summary=[];
 
-         for(i in responses){
-         var temp=[];
+          for(i in responses)
+          {
+           var temp=[];
       
-       temp.push(responses[i]["transaction-id"]);
+            temp.push(responses[i]["transaction-id"]);
      
-       temp.push(responses[i]["start-time"]);
-       temp.push(responses[i].id);
-       exercise_summary.push(temp);
+             temp.push(responses[i]["start-time"]);
+             temp.push(responses[i].id);
+             exercise_summary.push(temp);
 
-       }
-
-
-
-
-
-
-
-           var dat =
-           {
-            userid :user_id,
- 
-            transactionid: transaction_id,
-            access_token:Accesstoken,
-           
-              data:exercise_summary
            }
+
+           var dat = {
+
+                        userid :user_id,
+                        transactionid: transaction_id,
+                        access_token:Accesstoken,           
+                         data:exercise_summary
+                      }
           
-           resolve(dat); 
+          resolve(dat); 
           
 }
 
@@ -541,16 +516,14 @@ mongo.connect(url, function(err, db) {
         reject(err);
       }
       else if (!result.length) {                                                   
-     reject(result);
+       reject(result);
 
 
-  } else{
-
- 
- resolve(result);
-  
- 
-}
+     } 
+     else
+     {
+      resolve(result);
+     }
     
     });
     }
@@ -565,7 +538,7 @@ function Get_accesstoken(userid)
 
  return new Promise( function( resolve, reject ){
  
-mongo.connect(url, function(err, db) {
+  mongo.connect(url, function(err, db) {
     if (err)
     {
       reject(err);
@@ -575,22 +548,21 @@ mongo.connect(url, function(err, db) {
      var dbo = db.db("usertoken");
      var query = { user_idtoken:userid };
     dbo.collection("user").find(query).toArray(function(err, result) {
+
       if(err)
       {
-        reject(err);
+       reject(err);
       }
       else if (!result.length) { 
-      console.log(result);                                                  
-     reject(result);
+                                                      
+      reject(result);
 
 
-  } else{
-
-
- resolve(result);
-  
- 
-}
+     } 
+     else
+     {
+      resolve(result);
+     }
     
     });
     }
@@ -606,26 +578,21 @@ req({
     headers: {
       
  
-'Authorization': `Bearer ${Accesstoken}`
-    },
+      'Authorization': `Bearer ${Accesstoken}`
+     },
 
-  uri:   'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+' ',
+      uri:   'https://www.polaraccesslink.com/v3/users/'+userid+'/exercise-transactions/'+transactionid+' ',
 
-
-   
     method: 'PUT'
   }, function  (err, res, body) {
     
-    if (err ) {
- reject(err );
+    if (err ) 
+    {
+     reject(err );
     }
     else if(res.statusCode == 200)
     {
-console.log("IST OKI ");
-       resolve(data);
-
-
-        
+     resolve(data);    
     }
   else if(res.statusCode == 204)
   {
@@ -641,3 +608,4 @@ console.log("IST OKI ");
  } ) ;
  } ) ; 
 }
+
