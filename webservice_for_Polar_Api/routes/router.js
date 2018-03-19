@@ -609,3 +609,41 @@ req({
  } ) ; 
 }
 
+function insert_heart_tobase(userid,heartrate)
+{
+
+ return new Promise( function( resolve, reject ){
+ var item = {
+             userid: userid,
+             heart_rate: heartrate
+             };
+   mongo.connect(url, function(err, db) {
+    if (err)
+    {
+      reject(err);
+    }
+    else
+    {
+     var dbo = db.db("usertoken");
+     var query = { userid: userid };
+  dbo.collection("user").insertOne(item, function(err, result) {
+  if(err)
+      {
+        reject(err);
+      }
+     else
+     {
+      resolve('Item inserted');
+      db.close();
+     }
+    
+     
+
+      })
+     
+   
+    }
+  });
+  });
+
+}

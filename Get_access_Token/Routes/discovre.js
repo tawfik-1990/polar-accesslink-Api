@@ -3,11 +3,13 @@
 var querystring = require('querystring');
 var req = require('request');
 var UUID = require('uuid-js');
-
+var mongodb = require("mongodb");
+var ObjectID = mongodb.ObjectID;
 var assert = require('assert');
-var mongo = require('mongodb').MongoClient;
+// var mongo = require('mongodb').MongoClient;
 const URLSearchParams = require ('url') ;
 const btoa = require('btoa');
+
 const { catchAsync } = require('./utils');
 const router = express.Router();
 const utf8 = require('utf8');
@@ -15,36 +17,41 @@ const utf8 = require('utf8');
 
 
  
-const redirect = 'http://localhost:50451/callback';
- var url = 'mongodb://localhost:27017/';
+const redirect = process.env.REDIRECT;
+
 
 
  router.get('/', function (req, res)  {
+
+
    res.render('login');
 
 });
 
 
 router.post('/login', (req, res) => {
+  
 
   const CLIENT_ID = req.body.clientid;
 const CLIENT_SECRET = req.body.ClientSecret;
 const email = req.body.email;
 const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
 
-   res.redirect(`https://flow.polar.com/oauth2/authorization?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${redirect}&access_type=offline&approval_prompt=force`);
+   res.redirect(`https://flow.polar.com/oauth2/authorization?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${redirect}`);
    router.get('/callback', function (req, res)  {
+
 
   if (!req.query.code) throw new Error('NoCodeProvided');
   const code = req.query.code;
- 
+  
+
 
  access(code,redirect,creds, function(err, body) {
   if (err) {
    res.json(err);
   } else {
   
-    
+
      
 var Accesstoken= body.access_token;
 var userid=body.x_user_id;
@@ -59,9 +66,9 @@ if (err) {
    res.json(err);
   } else {
 
-    res.redirect('/erfoglisch');
-    insert_acces_token_to_database(email, Accesstoken, userid,CLIENT_ID ,CLIENT_SECRET)
-
+    
+ insert(email, Accesstoken, userid,CLIENT_ID ,CLIENT_SECRET);
+res.redirect('/erfoglisch');
   }
 
 
@@ -79,8 +86,10 @@ if (err) {
 });
 
 
-
 });
+
+
+
 });
 
 
@@ -132,10 +141,8 @@ else
 {
 
   callback(null, JSON.parse(body)); 
- 
 
 }
-
 
   } );
 
@@ -209,22 +216,30 @@ req({
 
 
 
-function insert_acces_token_to_database(userid, accestoken,user_idtoken,clientid, ClientSecret)
+function insert(userid, accestoken,user_idtoken,clientid, ClientSecret)
 {
 
- 
- var item = {
+  var item = {
     userid: userid,
    access_token: accestoken,
    user_idtoken:user_idtoken,
    client_id : clientid,
 client_secret :ClientSecret
   };
-mongo.connect(url, function(err, db) {
-    assert.equal(null, err);
-     var dbo = db.db("usertoken");
-     var query = { userid: userid };
-    dbo.collection("user").find(query).toArray(function(err, result) {
+var db;
+
+
+mongodb.MongoClient.connect(process.env.MONGODB_URI, function (err, client) {
+  if (err) {
+    console.log(err);
+    process.exit(1);
+  }
+
+
+  db = client.db();
+  console.log("con is ready");
+  var query = { userid: userid };
+    db.collection("user").find(query).toArray(function(err, result) {
       if(err)
       {
         console.log(err);
@@ -232,46 +247,44 @@ mongo.connect(url, function(err, db) {
       else if (!result.length)
        {                                                   
     
-      mongo.connect(url, function(err, db) {
-      assert.equal(null, err);
-     var dbo = db.db("usertoken");
     
+    
+db = client.db();
+db.collection("user").insertOne(item, function(err, result) {
 
-dbo.collection("user").insertOne(item, function(err, result) {
   assert.equal(null, err);
-      
+      console.log("is inserd");
      
-      db.close();
+      
 
       })
-})
-      } 
-     else
+
+      }
+      else
       {
+        console.log('Works');
 
-  console.log('Works');
-
-  mongo.connect(url, function(err, db) {
-    assert.equal(null, err);
-     var dbo = db.db("usertoken");
+ 
+     db = client.db();
      var query = { userid: userid };
     var newvalues = { $set: {access_token:accestoken ,user_idtoken:user_idtoken,  client_id : clientid,
         client_secret :ClientSecret } };
-     dbo.collection("user").updateOne(query, newvalues, function(err, res){
+     db.collection("user").updateOne(query, newvalues, function(err, res){
       assert.equal(null, err);
      
-       
-      db.close();
+        console.log("is update");
+  
 
 
        })
 
-  })
+  
+      } 
 
+
+});
+});
 }
-    
-    });
-  });
-}
+
 
 module.exports = router;

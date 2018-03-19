@@ -7,6 +7,8 @@ var exphbs = require('express-handlebars');
 app.use(bodyParser.urlencoded({ extended: false }));
 
 
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 
@@ -42,9 +44,10 @@ app.use((err, req, res, next) => {
       });
   }
 });
+app.set('port', (process.env.PORT || 50451));
 
-app.listen(50451, () => {
-  console.info('Running on port 50451');
+app.listen(app.get('port'), function(){
+  console.info('Running on port   ', app.get('port'));
 });
 
 
