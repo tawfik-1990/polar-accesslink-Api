@@ -67,7 +67,7 @@ if (err) {
   } else {
 
     
- insert(email, Accesstoken, userid,CLIENT_ID ,CLIENT_SECRET);
+ insert_access_token_to_database(email, Accesstoken, userid,CLIENT_ID ,CLIENT_SECRET);
 res.redirect('/erfoglisch');
   }
 
@@ -75,14 +75,7 @@ res.redirect('/erfoglisch');
 
 })
 
-
-
- 
-
-
-
-
-  }
+ }
 });
 
 
@@ -91,8 +84,6 @@ res.redirect('/erfoglisch');
 
 
 });
-
-
 
 
 router.get('/erfoglisch', function (req, res)  {
@@ -216,7 +207,7 @@ req({
 
 
 
-function insert(userid, accestoken,user_idtoken,clientid, ClientSecret)
+function insert_access_token_to_database(userid, accestoken,user_idtoken,clientid, ClientSecret)
 {
 
   var item = {
@@ -237,7 +228,7 @@ mongodb.MongoClient.connect(process.env.MONGODB_URI, function (err, client) {
 
 
   db = client.db();
-  console.log("con is ready");
+  
   var query = { userid: userid };
     db.collection("user").find(query).toArray(function(err, result) {
       if(err)
@@ -253,7 +244,7 @@ db = client.db();
 db.collection("user").insertOne(item, function(err, result) {
 
   assert.equal(null, err);
-      console.log("is inserd");
+     
      
       
 
@@ -272,7 +263,7 @@ db.collection("user").insertOne(item, function(err, result) {
      db.collection("user").updateOne(query, newvalues, function(err, res){
       assert.equal(null, err);
      
-        console.log("is update");
+     
   
 
 
