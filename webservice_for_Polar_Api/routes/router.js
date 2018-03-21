@@ -1,7 +1,8 @@
 var express = require('express');
 var querystring = require('querystring');
 var req = require('request');
-var mongo = require('mongodb').MongoClient;
+var mongodb = require("mongodb");
+var ObjectID = mongodb.ObjectID;
 var assert = require('assert');
 const btoa = require('btoa');
 const utf8 = require('utf8');
@@ -10,7 +11,7 @@ const utf8 = require('utf8');
 
 
 
-var url = 'mongodb://localhost:27017/';
+//var url = 'mongodb://localhost:27017/';
 var app = module.exports = express.Router();
  
 
@@ -24,6 +25,9 @@ app.post('/heart/:userid', function(req,res)
   {
   return res.status(404).send({ "success": false, "msg": "userid is false", "error": err })
   }
+
+
+ 
 
 
 Get_Cle_Secret(userid)
@@ -499,18 +503,19 @@ req({
 function Get_Cle_Secret (userid)
 {
 
+var db ;
  return new Promise( function( resolve, reject ){
 
-mongo.connect(url, function(err, db) {
+mongodb.connect("mongodb://tawfik:tawfik@ds115799.mlab.com:15799/projekt2", function(err, client) {
     if (err)
     {
     	reject(err);
     }
     else
     {
-     var dbo = db.db("usertoken");
+       db = client.db();
      var query = { userid: userid };
-    dbo.collection("user").find(query).toArray(function(err, result) {
+    db.collection("user").find(query).toArray(function(err, result) {
       if(err)
       {
         reject(err);
@@ -523,6 +528,8 @@ mongo.connect(url, function(err, db) {
      else
      {
       resolve(result);
+
+      
      }
     
     });
@@ -536,18 +543,19 @@ mongo.connect(url, function(err, db) {
 function Get_accesstoken(userid)
 {
 
+var db ;
  return new Promise( function( resolve, reject ){
  
-  mongo.connect(url, function(err, db) {
+  mongodb.connect("mongodb://tawfik:tawfik@ds115799.mlab.com:15799/projekt2", function(err, client) {
     if (err)
     {
       reject(err);
     }
     else
     {
-     var dbo = db.db("usertoken");
+     db = client.db();
      var query = { user_idtoken:userid };
-    dbo.collection("user").find(query).toArray(function(err, result) {
+   db.collection("user").find(query).toArray(function(err, result) {
 
       if(err)
       {
@@ -562,6 +570,7 @@ function Get_accesstoken(userid)
      else
      {
       resolve(result);
+      console.log(result);
      }
     
     });
