@@ -11,7 +11,7 @@ const utf8 = require('utf8');
 
 
 
-//var url = 'mongodb://localhost:27017/';
+
 var app = module.exports = express.Router();
  
 
