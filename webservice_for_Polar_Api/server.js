@@ -18,12 +18,13 @@ app.use(cors());
  
 
  
-var port = 3001;
+
  
 
  
 app.use(require('./routes/router'));
- 
-http.createServer(app).listen(port, function (err) {
-  console.log('listening in http://localhost:' + port);
+ app.set('port', (process.env.PORT || 50451));
+
+app.listen(app.get('port'), function(){
+  console.info('Running on port   ', app.get('port'));
 });

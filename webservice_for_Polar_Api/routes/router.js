@@ -16,21 +16,16 @@ var app = module.exports = express.Router();
  
 
 
-app.post('/heart/:userid', function(req,res)
+app.get('/heart/:userid', function(req,res)
 
 {
 
  var userid = req.params.userid;
-  if (!userid || userid === "")
-  {
-  return res.status(404).send({ "success": false, "msg": "userid is false", "error": err })
-  }
 
 
- 
 
+ Get_Cle_Secret(userid)
 
-Get_Cle_Secret(userid)
 
 .then( function( data1 ) { 
 
@@ -41,7 +36,8 @@ const creds = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
 return Get_Notifications (creds)
 
    
-} ).then( function( data) {  
+} )
+.then( function( data) {  
 
 return Get_accesstoken(data)
    
@@ -97,9 +93,14 @@ const  dat = data7.data;
 return Commit_Transction  (Accesstoken,userid,transactionid,dat)
 
 } ).then( function( data8 ) { 
+return insert_heartrate_to_Database(data8)
 
 
-return res.status(200).send({ "success": true, "msg": data8})
+
+  } ).then( function( data9 ) { 
+
+return res.status(200).send({ "success": true, "msg":data9})
+
 
   } ).catch((error) => {
   console.log(error);
@@ -485,7 +486,7 @@ req({
                         userid :user_id,
                         transactionid: transaction_id,
                         access_token:Accesstoken,           
-                         data:exercise_summary
+                        data:exercise_summary
                       }
           
           resolve(dat); 
@@ -506,7 +507,7 @@ function Get_Cle_Secret (userid)
 var db ;
  return new Promise( function( resolve, reject ){
 
-mongodb.connect("mongodb://tawfik:tawfik@ds115799.mlab.com:15799/projekt2", function(err, client) {
+mongodb.connect(process.env.MONGODB_URI, function(err, client) {
     if (err)
     {
     	reject(err);
@@ -546,7 +547,7 @@ function Get_accesstoken(userid)
 var db ;
  return new Promise( function( resolve, reject ){
  
-  mongodb.connect("mongodb://tawfik:tawfik@ds115799.mlab.com:15799/projekt2", function(err, client) {
+  mongodb.connect(process.env.MONGODB_URI, function(err, client) {
     if (err)
     {
       reject(err);
@@ -570,7 +571,7 @@ var db ;
      else
      {
       resolve(result);
-      console.log(result);
+      
      }
     
     });
@@ -616,5 +617,73 @@ req({
   
  } ) ;
  } ) ; 
+}
+
+
+
+
+
+function insert_heartrate_to_Database(data)
+{
+
+var db ;
+ return new Promise( function( resolve, reject ){
+ 
+  mongodb.connect(process.env.MONGODB_URI, function(err, client) {
+    if (err)
+    {
+      reject(err);
+    }
+    else
+    {
+     db = client.db();
+     var query = { user_idtoken:data[0][2] };
+   db.collection("user").find(query).toArray(function(err, result) {
+
+      if(err)
+      {
+       reject(err);
+      }
+      else if (!result.length) { 
+                                                      
+      reject(result);
+
+
+     } 
+     else
+     {
+      
+      var useremail=result[0].userid;
+      console.log(useremail);
+      for(var i=0; j=data.length,i<j; i++)
+      {
+     
+       var item = {
+                    user: useremail,
+                    heart_rate: data[i][0],
+                    start_time:data[i][1],
+                    userid_polar: data[i][2]
+                   };
+     db = client.db();
+     db.collection("user").insertOne(item, function(err, result) {
+
+     assert.equal(null, err);
+     
+     
+      
+
+      })
+
+
+
+       }
+      resolve(data);
+     }
+    
+    });
+    }
+  });
+  });
+
 }
 
